@@ -8,6 +8,7 @@ ExclusiveArch: x86_64 aarch64
 Name:       edk2
 Version:    %{GITDATE}git%{GITCOMMIT}
 Release:    6%{?dist}
+Epoch:      1000
 Summary:    UEFI firmware for 64-bit virtual machines
 Group:      Applications/Emulators
 License:    BSD and OpenSSL and MIT
