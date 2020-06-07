@@ -1,0 +1,59 @@
+From d382b66affafe06c7e470e0a2dffbd3634b363f1 Mon Sep 17 00:00:00 2001
+From: Laszlo Ersek <lersek@redhat.com>
+Date: Tue, 19 Mar 2019 15:48:34 +0100
+Subject: Downgrade CryptoPkg INF files to OpenSSL 1.1.0i (RH only)
+
+Notes about the RHEL-8.0/20180508-ee3198e672e2 ->
+RHEL-8.1/20190308-89910a39dcfd rebase:
+
+- new patch, due to upstream commit a18f784cfdbe ("Upgrade OpenSSL to
+  1.1.0j", 2018-12-21)
+
+Upstream commit a18f784cfdbe (see above) advanced the OpenSSL git
+submodule from upstream OpenSSL commit d4e4bd2a8163 ("Prepare for 1.1.0h
+release", 2018-03-27) to upstream OpenSSL commit 74f2d9c1ec5f ("Prepare
+for 1.1.0j release", 2018-11-20). Meaning, upstream edk2 skipped 1.1.0i.
+
+However, Fedora 28 only offers 1.1.0i at this point (and it will not be
+rebased again until 1.1.0k is released). Therefore hunks in the upstream
+CryptoPkg commit that relate specifically to 1.1.0j have to be backed out.
+
+The only such hunks are the "crypto/getenv.c" additions to the INF files.
+The related upstream OpenSSL change was commit 1abdf08284af ("Use
+secure_getenv(3) when available.", 2018-09-24), part of tag
+"OpenSSL_1_1_0j".
+
+Signed-off-by: Laszlo Ersek <lersek@redhat.com>
+Signed-off-by: Danilo C. L. de Paula <ddepaula@redhat.com>
+---
+ CryptoPkg/Library/OpensslLib/OpensslLib.inf       | 1 -
+ CryptoPkg/Library/OpensslLib/OpensslLibCrypto.inf | 1 -
+ 2 files changed, 2 deletions(-)
+
+diff --git a/CryptoPkg/Library/OpensslLib/OpensslLib.inf b/CryptoPkg/Library/OpensslLib/OpensslLib.inf
+index 6162d29143..fcb8bfddde 100644
+--- a/CryptoPkg/Library/OpensslLib/OpensslLib.inf
++++ b/CryptoPkg/Library/OpensslLib/OpensslLib.inf
+@@ -282,7 +282,6 @@
+   $(OPENSSL_PATH)/crypto/evp/pmeth_lib.c
+   $(OPENSSL_PATH)/crypto/evp/scrypt.c
+   $(OPENSSL_PATH)/crypto/ex_data.c
+-  $(OPENSSL_PATH)/crypto/getenv.c
+   $(OPENSSL_PATH)/crypto/hmac/hm_ameth.c
+   $(OPENSSL_PATH)/crypto/hmac/hm_pmeth.c
+   $(OPENSSL_PATH)/crypto/hmac/hmac.c
+diff --git a/CryptoPkg/Library/OpensslLib/OpensslLibCrypto.inf b/CryptoPkg/Library/OpensslLib/OpensslLibCrypto.inf
+index b04bf62b4e..99ff89da0e 100644
+--- a/CryptoPkg/Library/OpensslLib/OpensslLibCrypto.inf
++++ b/CryptoPkg/Library/OpensslLib/OpensslLibCrypto.inf
+@@ -282,7 +282,6 @@
+   $(OPENSSL_PATH)/crypto/evp/pmeth_lib.c
+   $(OPENSSL_PATH)/crypto/evp/scrypt.c
+   $(OPENSSL_PATH)/crypto/ex_data.c
+-  $(OPENSSL_PATH)/crypto/getenv.c
+   $(OPENSSL_PATH)/crypto/hmac/hm_ameth.c
+   $(OPENSSL_PATH)/crypto/hmac/hm_pmeth.c
+   $(OPENSSL_PATH)/crypto/hmac/hmac.c
+-- 
+2.18.1
+

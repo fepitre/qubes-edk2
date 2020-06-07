@@ -1,0 +1,57 @@
+From f372886be5f1c41677f168be77c484bae5841361 Mon Sep 17 00:00:00 2001
+From: Laszlo Ersek <lersek@redhat.com>
+Date: Tue, 12 Apr 2016 20:50:25 +0200
+Subject: ArmVirtPkg: QemuFwCfgLib: allow UEFI_DRIVER client modules (RH only)
+
+Notes about the RHEL-8.0/20180508-ee3198e672e2 ->
+RHEL-8.1/20190308-89910a39dcfd rebase:
+
+- no change
+
+Notes about the RHEL-7.6/ovmf-20180508-2.gitee3198e672e2.el7 ->
+RHEL-8.0/20180508-ee3198e672e2 rebase:
+
+- reorder the rebase changelog in the commit message so that it reads like
+  a blog: place more recent entries near the top
+- no changes to the patch body
+
+Notes about the 20171011-92d07e48907f -> 20180508-ee3198e672e2 rebase:
+
+- no change
+
+Notes about the 20170228-c325e41585e3 -> 20171011-92d07e48907f rebase:
+
+- no changes
+
+Notes about the 20160608b-988715a -> 20170228-c325e41585e3 rebase:
+
+- no changes
+
+Contributed-under: TianoCore Contribution Agreement 1.0
+Signed-off-by: Laszlo Ersek <lersek@redhat.com>
+(cherry picked from commit 8e2153358aa2bba2c91faa87a70beadcaae03fd8)
+(cherry picked from commit 5af259a93f4bbee5515ae18638068125e170f2cd)
+(cherry picked from commit 22b073005af491eef177ef5f80ffe71c1ebabb03)
+(cherry picked from commit f77f1e7dd6013f918c70e089c95b8f4166085fb9)
+(cherry picked from commit 762595334aa7ce88412cc77e136db9b41577a699)
+Signed-off-by: Danilo C. L. de Paula <ddepaula@redhat.com>
+---
+ ArmVirtPkg/Library/QemuFwCfgLib/QemuFwCfgLib.inf | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/ArmVirtPkg/Library/QemuFwCfgLib/QemuFwCfgLib.inf b/ArmVirtPkg/Library/QemuFwCfgLib/QemuFwCfgLib.inf
+index eff4a21650..adf1ff6c6a 100644
+--- a/ArmVirtPkg/Library/QemuFwCfgLib/QemuFwCfgLib.inf
++++ b/ArmVirtPkg/Library/QemuFwCfgLib/QemuFwCfgLib.inf
+@@ -22,7 +22,7 @@
+   FILE_GUID                      = B271F41F-B841-48A9-BA8D-545B4BC2E2BF
+   MODULE_TYPE                    = BASE
+   VERSION_STRING                 = 1.0
+-  LIBRARY_CLASS                  = QemuFwCfgLib|DXE_DRIVER
++  LIBRARY_CLASS                  = QemuFwCfgLib|DXE_DRIVER UEFI_DRIVER
+ 
+   CONSTRUCTOR                    = QemuFwCfgInitialize
+ 
+-- 
+2.18.1
+

@@ -1,0 +1,111 @@
+From f9b73437b9b231773c1a20e0c516168817a930a2 Mon Sep 17 00:00:00 2001
+From: Laszlo Ersek <lersek@redhat.com>
+Date: Wed, 14 Oct 2015 15:59:06 +0200
+Subject: OvmfPkg: take PcdResizeXterm from the QEMU command line (RH only)
+
+Notes about the RHEL-8.0/20180508-ee3198e672e2 ->
+RHEL-8.1/20190308-89910a39dcfd rebase:
+
+- no change
+
+Notes about the RHEL-7.6/ovmf-20180508-2.gitee3198e672e2.el7 ->
+RHEL-8.0/20180508-ee3198e672e2 rebase:
+
+- reorder the rebase changelog in the commit message so that it reads like
+  a blog: place more recent entries near the top
+- no changes to the patch body
+
+Notes about the 20171011-92d07e48907f -> 20180508-ee3198e672e2 rebase:
+
+- no change
+
+Notes about the 20170228-c325e41585e3 -> 20171011-92d07e48907f rebase:
+
+- refresh downstream-only commit 8abc2a6ddad2 against context differences
+  in the DSC files from upstream commit 5e167d7e784c
+  ("OvmfPkg/PlatformPei: don't allocate reserved mem varstore if
+  SMM_REQUIRE", 2017-03-12).
+
+Notes about the 20160608b-988715a -> 20170228-c325e41585e3 rebase:
+
+- no changes
+
+Contributed-under: TianoCore Contribution Agreement 1.0
+Signed-off-by: Laszlo Ersek <lersek@redhat.com>
+(cherry picked from commit 6fa0c4d67c0bb8bde2ddd6db41c19eb0c40b2721)
+(cherry picked from commit 8abc2a6ddad25af7e88dc0cf57d55dfb75fbf92d)
+(cherry picked from commit b311932d3841c017a0f0fec553edcac365cc2038)
+(cherry picked from commit 61914fb81cf624c9028d015533b400b2794e52d3)
+(cherry picked from commit 2ebf3cc2ae99275d63bb6efd3c22dec76251a853)
+Signed-off-by: Danilo C. L. de Paula <ddepaula@redhat.com>
+---
+ OvmfPkg/OvmfPkgIa32.dsc             | 1 +
+ OvmfPkg/OvmfPkgIa32X64.dsc          | 1 +
+ OvmfPkg/OvmfPkgX64.dsc              | 1 +
+ OvmfPkg/PlatformPei/Platform.c      | 1 +
+ OvmfPkg/PlatformPei/PlatformPei.inf | 1 +
+ 5 files changed, 5 insertions(+)
+
+diff --git a/OvmfPkg/OvmfPkgIa32.dsc b/OvmfPkg/OvmfPkgIa32.dsc
+index 249b1d8dc0..3f1da66aab 100644
+--- a/OvmfPkg/OvmfPkgIa32.dsc
++++ b/OvmfPkg/OvmfPkgIa32.dsc
+@@ -531,6 +531,7 @@
+   #   ($(SMM_REQUIRE) == FALSE)
+   gEfiMdeModulePkgTokenSpaceGuid.PcdEmuVariableNvStoreReserved|0
+ 
++  gEfiMdeModulePkgTokenSpaceGuid.PcdResizeXterm|FALSE
+   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableBase64|0
+   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingBase|0
+   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareBase|0
+diff --git a/OvmfPkg/OvmfPkgIa32X64.dsc b/OvmfPkg/OvmfPkgIa32X64.dsc
+index 5ec186df4b..9bb0a4cede 100644
+--- a/OvmfPkg/OvmfPkgIa32X64.dsc
++++ b/OvmfPkg/OvmfPkgIa32X64.dsc
+@@ -537,6 +537,7 @@
+   #   ($(SMM_REQUIRE) == FALSE)
+   gEfiMdeModulePkgTokenSpaceGuid.PcdEmuVariableNvStoreReserved|0
+ 
++  gEfiMdeModulePkgTokenSpaceGuid.PcdResizeXterm|FALSE
+   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableBase64|0
+   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingBase|0
+   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareBase|0
+diff --git a/OvmfPkg/OvmfPkgX64.dsc b/OvmfPkg/OvmfPkgX64.dsc
+index 29538ade4d..3b7fc5328c 100644
+--- a/OvmfPkg/OvmfPkgX64.dsc
++++ b/OvmfPkg/OvmfPkgX64.dsc
+@@ -536,6 +536,7 @@
+   #   ($(SMM_REQUIRE) == FALSE)
+   gEfiMdeModulePkgTokenSpaceGuid.PcdEmuVariableNvStoreReserved|0
+ 
++  gEfiMdeModulePkgTokenSpaceGuid.PcdResizeXterm|FALSE
+   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableBase64|0
+   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingBase|0
+   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareBase|0
+diff --git a/OvmfPkg/PlatformPei/Platform.c b/OvmfPkg/PlatformPei/Platform.c
+index 22139a64cb..64b8034117 100644
+--- a/OvmfPkg/PlatformPei/Platform.c
++++ b/OvmfPkg/PlatformPei/Platform.c
+@@ -670,6 +670,7 @@ InitializePlatform (
+     PeiFvInitialization ();
+     MemMapInitialization ();
+     NoexecDxeInitialization ();
++    UPDATE_BOOLEAN_PCD_FROM_FW_CFG (PcdResizeXterm);
+   }
+ 
+   InstallClearCacheCallback ();
+diff --git a/OvmfPkg/PlatformPei/PlatformPei.inf b/OvmfPkg/PlatformPei/PlatformPei.inf
+index 5c8dd0fe6d..035ce249fe 100644
+--- a/OvmfPkg/PlatformPei/PlatformPei.inf
++++ b/OvmfPkg/PlatformPei/PlatformPei.inf
+@@ -96,6 +96,7 @@
+   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableSize
+   gEfiMdeModulePkgTokenSpaceGuid.PcdEmuVariableNvStoreReserved
+   gEfiMdeModulePkgTokenSpaceGuid.PcdPciDisableBusEnumeration
++  gEfiMdeModulePkgTokenSpaceGuid.PcdResizeXterm
+   gEfiMdeModulePkgTokenSpaceGuid.PcdDxeIplSwitchToLongMode
+   gEfiMdeModulePkgTokenSpaceGuid.PcdUse1GPageTable
+   gEfiMdeModulePkgTokenSpaceGuid.PcdSetNxForStack
+-- 
+2.18.1
+

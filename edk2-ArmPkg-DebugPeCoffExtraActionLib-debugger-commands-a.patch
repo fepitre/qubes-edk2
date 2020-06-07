@@ -1,0 +1,63 @@
+From 11a1c8085b0edccd3a304f704f47ec5d8ee6255d Mon Sep 17 00:00:00 2001
+From: Philippe Mathieu-Daude <philmd@redhat.com>
+Date: Thu, 1 Aug 2019 20:43:49 +0200
+Subject: [PATCH 3/3] ArmPkg: DebugPeCoffExtraActionLib: debugger commands are
+ not errors
+
+Message-id: <20190801184349.28512-4-philmd@redhat.com>
+Patchwork-id: 89860
+O-Subject:  [RHEL-8.1.0 edk2 PATCH v4 3/3] ArmPkg: DebugPeCoffExtraActionLib:
+	debugger commands are not errors
+Bugzilla: 1714446
+Acked-by: Andrew Jones <drjones@redhat.com>
+Acked-by: Laszlo Ersek <lersek@redhat.com>
+
+In commit 1fce963d89f3e we reduced the level of information printed
+by PeCoffLoaderRelocateImageExtraAction() but we did not update the
+similar PeCoffLoaderUnloadImageExtraAction() function.
+
+PeCoffLoaderUnloadImageExtraAction() prints helpful debugger commands
+for source level debugging. These messages should not be printed on the
+EFI_D_ERROR level; they don't report errors. Change the debug level
+(bitmask, actually) to DEBUG_LOAD | DEBUG_INFO, because the messages are
+printed in relation to image loading, and they are informative.
+
+Cc: Leif Lindholm <leif.lindholm@linaro.org>
+Cc: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Reported-by: Andrew Jones <drjones@redhat.com>
+Suggested-by: Laszlo Ersek <lersek@redhat.com>
+Signed-off-by: Philippe Mathieu-Daude <philmd@redhat.com>
+Reviewed-by: Laszlo Ersek <lersek@redhat.com>
+Reviewed-by: Leif Lindholm <leif.lindholm@linaro.org>
+(cherry picked from commit a6cd7fbac494ed3b2386db1f2a8b1a73f399e940)
+Signed-off-by: Philippe Mathieu-Daude <philmd@redhat.com>
+---
+ .../Library/DebugPeCoffExtraActionLib/DebugPeCoffExtraActionLib.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/ArmPkg/Library/DebugPeCoffExtraActionLib/DebugPeCoffExtraActionLib.c b/ArmPkg/Library/DebugPeCoffExtraActionLib/DebugPeCoffExtraActionLib.c
+index f298e58..895198f 100644
+--- a/ArmPkg/Library/DebugPeCoffExtraActionLib/DebugPeCoffExtraActionLib.c
++++ b/ArmPkg/Library/DebugPeCoffExtraActionLib/DebugPeCoffExtraActionLib.c
+@@ -128,14 +128,14 @@ PeCoffLoaderUnloadImageExtraAction (
+   if (ImageContext->PdbPointer) {
+ #ifdef __CC_ARM
+     // Print out the command for the RVD debugger to load symbols for this image
+-    DEBUG ((EFI_D_ERROR, "unload symbols_only %a\n", DeCygwinPathIfNeeded (ImageContext->PdbPointer, Temp, sizeof (Temp))));
++    DEBUG ((DEBUG_LOAD | DEBUG_INFO, "unload symbols_only %a\n", DeCygwinPathIfNeeded (ImageContext->PdbPointer, Temp, sizeof (Temp))));
+ #elif __GNUC__
+     // This may not work correctly if you generate PE/COFF directlyas then the Offset would not be required
+-    DEBUG ((EFI_D_ERROR, "remove-symbol-file %a 0x%08x\n", DeCygwinPathIfNeeded (ImageContext->PdbPointer, Temp, sizeof (Temp)), (UINTN)(ImageContext->ImageAddress + ImageContext->SizeOfHeaders)));
++    DEBUG ((DEBUG_LOAD | DEBUG_INFO, "remove-symbol-file %a 0x%08x\n", DeCygwinPathIfNeeded (ImageContext->PdbPointer, Temp, sizeof (Temp)), (UINTN)(ImageContext->ImageAddress + ImageContext->SizeOfHeaders)));
+ #else
+-    DEBUG ((EFI_D_ERROR, "Unloading %a\n", ImageContext->PdbPointer));
++    DEBUG ((DEBUG_LOAD | DEBUG_INFO, "Unloading %a\n", ImageContext->PdbPointer));
+ #endif
+   } else {
+-    DEBUG ((EFI_D_ERROR, "Unloading driver at 0x%11p\n", (VOID *)(UINTN) ImageContext->ImageAddress));
++    DEBUG ((DEBUG_LOAD | DEBUG_INFO, "Unloading driver at 0x%11p\n", (VOID *)(UINTN) ImageContext->ImageAddress));
+   }
+ }
+-- 
+1.8.3.1
+

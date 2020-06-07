@@ -1,0 +1,64 @@
+From 76b4ac28e975bd63c25db903a1d42c47b38cc756 Mon Sep 17 00:00:00 2001
+From: Laszlo Ersek <lersek@redhat.com>
+Date: Wed, 27 Jan 2016 03:05:18 +0100
+Subject: ArmVirtPkg: silence DEBUG_VERBOSE (0x00400000) in QemuRamfbDxe (RH
+ only)
+
+Notes about the RHEL-8.0/20180508-ee3198e672e2 ->
+RHEL-8.1/20190308-89910a39dcfd rebase:
+
+- new patch, due to upstream commit c64688f36a8b ("ArmVirtPkg: add
+  QemuRamfbDxe", 2018-06-14)
+
+QemuRamfbDxe uses FrameBufferLib. The FrameBufferBltLib instance added in
+commit b1ca386074bd ("MdeModulePkg: Add FrameBufferBltLib library
+instance") logs many messages on the VERBOSE level; for example, a normal
+boot with ArmVirtQemu[Kernel] can produce 500+ "VideoFill" messages,
+dependent on the progress bar, when the VERBOSE bit is set in
+PcdDebugPrintErrorLevel.
+
+QemuRamfbDxe itself doesn't log anything at the VERBOSE level, so we lose
+none of its messages this way.
+
+Signed-off-by: Laszlo Ersek <lersek@redhat.com>
+Signed-off-by: Danilo C. L. de Paula <ddepaula@redhat.com>
+---
+ ArmVirtPkg/ArmVirtQemu.dsc       | 5 ++++-
+ ArmVirtPkg/ArmVirtQemuKernel.dsc | 5 ++++-
+ 2 files changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/ArmVirtPkg/ArmVirtQemu.dsc b/ArmVirtPkg/ArmVirtQemu.dsc
+index a4cd66b846..aac4094665 100644
+--- a/ArmVirtPkg/ArmVirtQemu.dsc
++++ b/ArmVirtPkg/ArmVirtQemu.dsc
+@@ -421,7 +421,10 @@
+   #
+   # Video support
+   #
+-  OvmfPkg/QemuRamfbDxe/QemuRamfbDxe.inf
++  OvmfPkg/QemuRamfbDxe/QemuRamfbDxe.inf {
++    <PcdsFixedAtBuild>
++      gEfiMdePkgTokenSpaceGuid.PcdDebugPrintErrorLevel|0x8000004F
++  }
+   OvmfPkg/VirtioGpuDxe/VirtioGpu.inf
+   OvmfPkg/PlatformDxe/Platform.inf
+ 
+diff --git a/ArmVirtPkg/ArmVirtQemuKernel.dsc b/ArmVirtPkg/ArmVirtQemuKernel.dsc
+index d2b3f24394..c9a635e80b 100644
+--- a/ArmVirtPkg/ArmVirtQemuKernel.dsc
++++ b/ArmVirtPkg/ArmVirtQemuKernel.dsc
+@@ -399,7 +399,10 @@
+   #
+   # Video support
+   #
+-  OvmfPkg/QemuRamfbDxe/QemuRamfbDxe.inf
++  OvmfPkg/QemuRamfbDxe/QemuRamfbDxe.inf {
++    <PcdsFixedAtBuild>
++      gEfiMdePkgTokenSpaceGuid.PcdDebugPrintErrorLevel|0x8000004F
++  }
+   OvmfPkg/VirtioGpuDxe/VirtioGpu.inf
+   OvmfPkg/PlatformDxe/Platform.inf
+ 
+-- 
+2.18.1
+

@@ -1,0 +1,198 @@
+From 71c39f0fb0b9a3e9856cebc58ef3812752fd07cc Mon Sep 17 00:00:00 2001
+From: Laszlo Ersek <lersek@redhat.com>
+Date: Tue, 4 Jun 2019 11:06:45 +0200
+Subject: [PATCH 3/3] OvmfPkg/PlatformPei: set 32-bit UC area at PciBase /
+ PciExBarBase (pc/q35)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Message-id: <20190604090645.2847-4-lersek@redhat.com>
+Patchwork-id: 88483
+O-Subject:  [RHEL-8.1.0 edk2 PATCH v2 3/3] OvmfPkg/PlatformPei: set 32-bit UC
+	area at PciBase / PciExBarBase (pc/q35)
+Bugzilla: 1666941
+Acked-by: Philippe Mathieu-Daudé <philmd@redhat.com>
+Acked-by: Vitaly Kuznetsov <vkuznets@redhat.com>
+
+(This is a replacement for commit 39b9a5ffe661 ("OvmfPkg/PlatformPei: fix
+MTRR for low-RAM sizes that have many bits clear", 2019-05-16).)
+
+Reintroduce the same logic as seen in commit 39b9a5ffe661 for the pc
+(i440fx) board type.
+
+For q35, the same approach doesn't work any longer, given that (a) we'd
+like to keep the PCIEXBAR in the platform DSC a fixed-at-build PCD, and
+(b) QEMU expects the PCIEXBAR to reside at a lower address than the 32-bit
+PCI MMIO aperture.
+
+Therefore, introduce a helper function for determining the 32-bit
+"uncacheable" (MMIO) area base address:
+
+- On q35, this function behaves statically. Furthermore, the MTRR setup
+  exploits that the range [0xB000_0000, 0xFFFF_FFFF] can be marked UC with
+  just two variable MTRRs (one at 0xB000_0000 (size 256MB), another at
+  0xC000_0000 (size 1GB)).
+
+- On pc (i440fx), the function behaves dynamically, implementing the same
+  logic as commit 39b9a5ffe661 did. The PciBase value is adjusted to the
+  value calculated, similarly to commit 39b9a5ffe661. A further
+  simplification is that we show that the UC32 area size truncation to a
+  whole power of two automatically guarantees a >=2GB base address.
+
+Cc: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Cc: Gerd Hoffmann <kraxel@redhat.com>
+Cc: Jordan Justen <jordan.l.justen@intel.com>
+Ref: https://bugzilla.tianocore.org/show_bug.cgi?id=1859
+Signed-off-by: Laszlo Ersek <lersek@redhat.com>
+Reviewed-by: Philippe Mathieu-Daude <philmd@redhat.com>
+Acked-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+(cherry picked from commit 49edde15230a5bfd6746225eb95535eaa2ec1ba4)
+Signed-off-by: Laszlo Ersek <lersek@redhat.com>
+---
+ OvmfPkg/PlatformPei/MemDetect.c | 59 ++++++++++++++++++++++++++++++++++++++---
+ OvmfPkg/PlatformPei/Platform.c  |  5 +++-
+ OvmfPkg/PlatformPei/Platform.h  |  7 +++++
+ 3 files changed, 66 insertions(+), 5 deletions(-)
+
+diff --git a/OvmfPkg/PlatformPei/MemDetect.c b/OvmfPkg/PlatformPei/MemDetect.c
+index 2f9e835..0c38b70 100644
+--- a/OvmfPkg/PlatformPei/MemDetect.c
++++ b/OvmfPkg/PlatformPei/MemDetect.c
+@@ -20,6 +20,7 @@ Module Name:
+ // The package level header files this module uses
+ //
+ #include <IndustryStandard/E820.h>
++#include <IndustryStandard/I440FxPiix4.h>
+ #include <IndustryStandard/Q35MchIch9.h>
+ #include <PiPei.h>
+ 
+@@ -48,6 +49,8 @@ STATIC UINT32 mS3AcpiReservedMemorySize;
+ 
+ STATIC UINT16 mQ35TsegMbytes;
+ 
++UINT32 mQemuUc32Base;
++
+ VOID
+ Q35TsegMbytesInitialization (
+   VOID
+@@ -104,6 +107,54 @@ Q35TsegMbytesInitialization (
+ }
+ 
+ 
++VOID
++QemuUc32BaseInitialization (
++  VOID
++  )
++{
++  UINT32 LowerMemorySize;
++  UINT32 Uc32Size;
++
++  if (mXen) {
++    return;
++  }
++
++  if (mHostBridgeDevId == INTEL_Q35_MCH_DEVICE_ID) {
++    //
++    // On q35, the 32-bit area that we'll mark as UC, through variable MTRRs,
++    // starts at PcdPciExpressBaseAddress. The platform DSC is responsible for
++    // setting PcdPciExpressBaseAddress such that describing the
++    // [PcdPciExpressBaseAddress, 4GB) range require a very small number of
++    // variable MTRRs (preferably 1 or 2).
++    //
++    ASSERT (FixedPcdGet64 (PcdPciExpressBaseAddress) <= MAX_UINT32);
++    mQemuUc32Base = (UINT32)FixedPcdGet64 (PcdPciExpressBaseAddress);
++    return;
++  }
++
++  ASSERT (mHostBridgeDevId == INTEL_82441_DEVICE_ID);
++  //
++  // On i440fx, start with the [LowerMemorySize, 4GB) range. Make sure one
++  // variable MTRR suffices by truncating the size to a whole power of two,
++  // while keeping the end affixed to 4GB. This will round the base up.
++  //
++  LowerMemorySize = GetSystemMemorySizeBelow4gb ();
++  Uc32Size = GetPowerOfTwo32 ((UINT32)(SIZE_4GB - LowerMemorySize));
++  mQemuUc32Base = (UINT32)(SIZE_4GB - Uc32Size);
++  //
++  // Assuming that LowerMemorySize is at least 1 byte, Uc32Size is at most 2GB.
++  // Therefore mQemuUc32Base is at least 2GB.
++  //
++  ASSERT (mQemuUc32Base >= BASE_2GB);
++
++  if (mQemuUc32Base != LowerMemorySize) {
++    DEBUG ((DEBUG_VERBOSE, "%a: rounded UC32 base from 0x%x up to 0x%x, for "
++      "an UC32 size of 0x%x\n", __FUNCTION__, LowerMemorySize, mQemuUc32Base,
++      Uc32Size));
++  }
++}
++
++
+ /**
+   Iterate over the RAM entries in QEMU's fw_cfg E820 RAM map that start outside
+   of the 32-bit address range.
+@@ -694,11 +745,11 @@ QemuInitializeRam (
+     ASSERT_EFI_ERROR (Status);
+ 
+     //
+-    // Set memory range from the "top of lower RAM" (RAM below 4GB) to 4GB as
+-    // uncacheable
++    // Set the memory range from the start of the 32-bit MMIO area (32-bit PCI
++    // MMIO aperture on i440fx, PCIEXBAR on q35) to 4GB as uncacheable.
+     //
+-    Status = MtrrSetMemoryAttribute (LowerMemorySize,
+-               SIZE_4GB - LowerMemorySize, CacheUncacheable);
++    Status = MtrrSetMemoryAttribute (mQemuUc32Base, SIZE_4GB - mQemuUc32Base,
++               CacheUncacheable);
+     ASSERT_EFI_ERROR (Status);
+   }
+ }
+diff --git a/OvmfPkg/PlatformPei/Platform.c b/OvmfPkg/PlatformPei/Platform.c
+index 64b8034..de19f5c 100644
+--- a/OvmfPkg/PlatformPei/Platform.c
++++ b/OvmfPkg/PlatformPei/Platform.c
+@@ -197,7 +197,8 @@ MemMapInitialization (
+       ASSERT (PciExBarBase <= MAX_UINT32 - SIZE_256MB);
+       PciBase = (UINT32)(PciExBarBase + SIZE_256MB);
+     } else {
+-      PciBase = (TopOfLowRam < BASE_2GB) ? BASE_2GB : TopOfLowRam;
++      ASSERT (TopOfLowRam <= mQemuUc32Base);
++      PciBase = mQemuUc32Base;
+     }
+ 
+     //
+@@ -656,6 +657,8 @@ InitializePlatform (
+ 
+   PublishPeiMemory ();
+ 
++  QemuUc32BaseInitialization ();
++
+   InitializeRamRegions ();
+ 
+   if (mXen) {
+diff --git a/OvmfPkg/PlatformPei/Platform.h b/OvmfPkg/PlatformPei/Platform.h
+index b12a5c1..2b486ce 100644
+--- a/OvmfPkg/PlatformPei/Platform.h
++++ b/OvmfPkg/PlatformPei/Platform.h
+@@ -69,6 +69,11 @@ GetSystemMemorySizeBelow4gb (
+   );
+ 
+ VOID
++QemuUc32BaseInitialization (
++  VOID
++  );
++
++VOID
+ InitializeRamRegions (
+   VOID
+   );
+@@ -120,4 +125,6 @@ extern UINT32 mMaxCpuCount;
+ 
+ extern UINT16 mHostBridgeDevId;
+ 
++extern UINT32 mQemuUc32Base;
++
+ #endif // _PLATFORM_PEI_H_INCLUDED_
+-- 
+1.8.3.1
+

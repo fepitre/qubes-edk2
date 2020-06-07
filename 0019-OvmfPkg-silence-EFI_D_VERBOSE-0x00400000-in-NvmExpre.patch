@@ -1,0 +1,99 @@
+From 58bba429b9ec7b78109940ef945d0dc93f3cd958 Mon Sep 17 00:00:00 2001
+From: Paolo Bonzini <pbonzini@redhat.com>
+Date: Tue, 21 Nov 2017 00:57:47 +0100
+Subject: OvmfPkg: silence EFI_D_VERBOSE (0x00400000) in NvmExpressDxe (RH
+ only)
+
+Notes about the RHEL-8.0/20180508-ee3198e672e2 ->
+RHEL-8.1/20190308-89910a39dcfd rebase:
+
+- no change
+
+Notes about the RHEL-7.6/ovmf-20180508-2.gitee3198e672e2.el7 ->
+RHEL-8.0/20180508-ee3198e672e2 rebase:
+
+- reorder the rebase changelog in the commit message so that it reads like
+  a blog: place more recent entries near the top
+- no changes to the patch body
+
+Notes about the 20171011-92d07e48907f -> 20180508-ee3198e672e2 rebase:
+
+- no changes
+
+Message-id: <20171120235748.29669-7-pbonzini@redhat.com>
+Patchwork-id: 77759
+O-Subject:  [PATCH 6/7] OvmfPkg: silence EFI_D_VERBOSE (0x00400000) in
+	NvmExpressDxe (RH only)
+Bugzilla: 1488247
+Acked-by: Laszlo Ersek <lersek@redhat.com>
+Acked-by: Thomas Huth <thuth@redhat.com>
+
+From: Laszlo Ersek <lersek@redhat.com>
+
+NvmExpressDxe logs all BlockIo read & write calls on the EFI_D_VERBOSE
+level.
+
+Signed-off-by: Laszlo Ersek <lersek@redhat.com>
+Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
+(this patch was previously applied as commit 5f432837b9c60c2929b13dda1a1b488d5c3a6d2f)
+(cherry picked from commit 33e00146eb878588ad1395d7b1ae38f401729da4)
+(cherry picked from commit bd10cabcfcb1bc9a32b05062f4ee3792e27bc2d8)
+(cherry picked from commit 5a27af700f49e00608f232f618dedd7bf5e9b3e6)
+Signed-off-by: Danilo C. L. de Paula <ddepaula@redhat.com>
+---
+ OvmfPkg/OvmfPkgIa32.dsc    | 5 ++++-
+ OvmfPkg/OvmfPkgIa32X64.dsc | 5 ++++-
+ OvmfPkg/OvmfPkgX64.dsc     | 5 ++++-
+ 3 files changed, 12 insertions(+), 3 deletions(-)
+
+diff --git a/OvmfPkg/OvmfPkgIa32.dsc b/OvmfPkg/OvmfPkgIa32.dsc
+index 8f1cf80fe6..bbf5e38274 100644
+--- a/OvmfPkg/OvmfPkgIa32.dsc
++++ b/OvmfPkg/OvmfPkgIa32.dsc
+@@ -740,7 +740,10 @@
+   OvmfPkg/SataControllerDxe/SataControllerDxe.inf
+   MdeModulePkg/Bus/Ata/AtaAtapiPassThru/AtaAtapiPassThru.inf
+   MdeModulePkg/Bus/Ata/AtaBusDxe/AtaBusDxe.inf
+-  MdeModulePkg/Bus/Pci/NvmExpressDxe/NvmExpressDxe.inf
++  MdeModulePkg/Bus/Pci/NvmExpressDxe/NvmExpressDxe.inf {
++    <PcdsFixedAtBuild>
++      gEfiMdePkgTokenSpaceGuid.PcdDebugPrintErrorLevel|0x8000004F
++  }
+   MdeModulePkg/Universal/HiiDatabaseDxe/HiiDatabaseDxe.inf
+   MdeModulePkg/Universal/SetupBrowserDxe/SetupBrowserDxe.inf
+   MdeModulePkg/Universal/DisplayEngineDxe/DisplayEngineDxe.inf
+diff --git a/OvmfPkg/OvmfPkgIa32X64.dsc b/OvmfPkg/OvmfPkgIa32X64.dsc
+index 62d6d6c406..3ec1b916e7 100644
+--- a/OvmfPkg/OvmfPkgIa32X64.dsc
++++ b/OvmfPkg/OvmfPkgIa32X64.dsc
+@@ -749,7 +749,10 @@
+   OvmfPkg/SataControllerDxe/SataControllerDxe.inf
+   MdeModulePkg/Bus/Ata/AtaAtapiPassThru/AtaAtapiPassThru.inf
+   MdeModulePkg/Bus/Ata/AtaBusDxe/AtaBusDxe.inf
+-  MdeModulePkg/Bus/Pci/NvmExpressDxe/NvmExpressDxe.inf
++  MdeModulePkg/Bus/Pci/NvmExpressDxe/NvmExpressDxe.inf {
++    <PcdsFixedAtBuild>
++      gEfiMdePkgTokenSpaceGuid.PcdDebugPrintErrorLevel|0x8000004F
++  }
+   MdeModulePkg/Universal/HiiDatabaseDxe/HiiDatabaseDxe.inf
+   MdeModulePkg/Universal/SetupBrowserDxe/SetupBrowserDxe.inf
+   MdeModulePkg/Universal/DisplayEngineDxe/DisplayEngineDxe.inf
+diff --git a/OvmfPkg/OvmfPkgX64.dsc b/OvmfPkg/OvmfPkgX64.dsc
+index 992b141113..ea54b4b8e8 100644
+--- a/OvmfPkg/OvmfPkgX64.dsc
++++ b/OvmfPkg/OvmfPkgX64.dsc
+@@ -747,7 +747,10 @@
+   OvmfPkg/SataControllerDxe/SataControllerDxe.inf
+   MdeModulePkg/Bus/Ata/AtaAtapiPassThru/AtaAtapiPassThru.inf
+   MdeModulePkg/Bus/Ata/AtaBusDxe/AtaBusDxe.inf
+-  MdeModulePkg/Bus/Pci/NvmExpressDxe/NvmExpressDxe.inf
++  MdeModulePkg/Bus/Pci/NvmExpressDxe/NvmExpressDxe.inf {
++    <PcdsFixedAtBuild>
++      gEfiMdePkgTokenSpaceGuid.PcdDebugPrintErrorLevel|0x8000004F
++  }
+   MdeModulePkg/Universal/HiiDatabaseDxe/HiiDatabaseDxe.inf
+   MdeModulePkg/Universal/SetupBrowserDxe/SetupBrowserDxe.inf
+   MdeModulePkg/Universal/DisplayEngineDxe/DisplayEngineDxe.inf
+-- 
+2.18.1
+

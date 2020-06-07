@@ -1,0 +1,109 @@
+From d362291ada9ee22316e3c069dc788c4c801b0796 Mon Sep 17 00:00:00 2001
+From: Laszlo Ersek <lersek@redhat.com>
+Date: Tue, 4 Jun 2019 11:06:44 +0200
+Subject: [PATCH 2/3] OvmfPkg: raise the PCIEXBAR base to 2816 MB on Q35
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Message-id: <20190604090645.2847-3-lersek@redhat.com>
+Patchwork-id: 88481
+O-Subject:  [RHEL-8.1.0 edk2 PATCH v2 2/3] OvmfPkg: raise the PCIEXBAR base to
+	2816 MB on Q35
+Bugzilla: 1666941
+Acked-by: Philippe Mathieu-Daudé <philmd@redhat.com>
+Acked-by: Vitaly Kuznetsov <vkuznets@redhat.com>
+
+(This is a replacement for commit 75136b29541b, "OvmfPkg/PlatformPei:
+reorder the 32-bit PCI window vs. the PCIEXBAR on q35", 2019-05-16).
+
+Commit 7b8fe63561b4 ("OvmfPkg: PlatformPei: enable PCIEXBAR (aka MMCONFIG
+/ ECAM) on Q35", 2016-03-10) claimed that,
+
+  On Q35 machine types that QEMU intends to support in the long term, QEMU
+  never lets the RAM below 4 GB exceed 2 GB.
+
+Alas, this statement came from a misunderstanding that occurred while we
+worked out the interface contract. In fact QEMU does allow the 32-bit RAM
+extend up to 0xB000_0000 (exclusive), in case the RAM size falls in the
+range (0x8000_0000, 0xB000_0000) (i.e., the RAM size is greater than
+2048MB and smaller than 2816MB).
+
+In turn, such a RAM size (justifiedly) triggers
+
+  ASSERT (TopOfLowRam <= PciExBarBase);
+
+in MemMapInitialization(), because we placed the 256MB PCIEXBAR at
+0x8000_0000 (2GB) exactly, relying on the interface contract. (And, the
+32-bit PCI window would follow the PCIEXBAR, covering the [0x9000_0000,
+0xFC00_0000) range.)
+
+In order to fix this, place the PCIEXBAR at 2816MB (0xB000_0000), and
+start the 32-bit PCI window at 3 GB (0xC000_0000). This shrinks the 32-bit
+PCI window to
+
+  0xFC00_0000 - 0xC000_0000 = 0x3C00_0000 = 960 MB.
+
+Cc: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Cc: Gerd Hoffmann <kraxel@redhat.com>
+Cc: Jordan Justen <jordan.l.justen@intel.com>
+Ref: https://bugzilla.tianocore.org/show_bug.cgi?id=1859
+Signed-off-by: Laszlo Ersek <lersek@redhat.com>
+Reviewed-by: Philippe Mathieu-Daude <philmd@redhat.com>
+Acked-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+(cherry picked from commit b07de0974b65a6a393c2d477427d1d6c7acce002)
+Signed-off-by: Laszlo Ersek <lersek@redhat.com>
+---
+ OvmfPkg/OvmfPkgIa32.dsc    | 4 ++--
+ OvmfPkg/OvmfPkgIa32X64.dsc | 4 ++--
+ OvmfPkg/OvmfPkgX64.dsc     | 4 ++--
+ 3 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/OvmfPkg/OvmfPkgIa32.dsc b/OvmfPkg/OvmfPkgIa32.dsc
+index bbf5e38..cf5f2ea 100644
+--- a/OvmfPkg/OvmfPkgIa32.dsc
++++ b/OvmfPkg/OvmfPkgIa32.dsc
+@@ -497,8 +497,8 @@
+   # the PCIEXBAR register.
+   #
+   # On Q35 machine types that QEMU intends to support in the long term, QEMU
+-  # never lets the RAM below 4 GB exceed 2 GB.
+-  gEfiMdePkgTokenSpaceGuid.PcdPciExpressBaseAddress|0x80000000
++  # never lets the RAM below 4 GB exceed 2816 MB.
++  gEfiMdePkgTokenSpaceGuid.PcdPciExpressBaseAddress|0xB0000000
+ 
+ !ifdef $(SOURCE_DEBUG_ENABLE)
+   gEfiSourceLevelDebugPkgTokenSpaceGuid.PcdDebugLoadImageMethod|0x2
+diff --git a/OvmfPkg/OvmfPkgIa32X64.dsc b/OvmfPkg/OvmfPkgIa32X64.dsc
+index 3ec1b91..5a24065 100644
+--- a/OvmfPkg/OvmfPkgIa32X64.dsc
++++ b/OvmfPkg/OvmfPkgIa32X64.dsc
+@@ -502,8 +502,8 @@
+   # the PCIEXBAR register.
+   #
+   # On Q35 machine types that QEMU intends to support in the long term, QEMU
+-  # never lets the RAM below 4 GB exceed 2 GB.
+-  gEfiMdePkgTokenSpaceGuid.PcdPciExpressBaseAddress|0x80000000
++  # never lets the RAM below 4 GB exceed 2816 MB.
++  gEfiMdePkgTokenSpaceGuid.PcdPciExpressBaseAddress|0xB0000000
+ 
+ !ifdef $(SOURCE_DEBUG_ENABLE)
+   gEfiSourceLevelDebugPkgTokenSpaceGuid.PcdDebugLoadImageMethod|0x2
+diff --git a/OvmfPkg/OvmfPkgX64.dsc b/OvmfPkg/OvmfPkgX64.dsc
+index ea54b4b..6ab50c9 100644
+--- a/OvmfPkg/OvmfPkgX64.dsc
++++ b/OvmfPkg/OvmfPkgX64.dsc
+@@ -502,8 +502,8 @@
+   # the PCIEXBAR register.
+   #
+   # On Q35 machine types that QEMU intends to support in the long term, QEMU
+-  # never lets the RAM below 4 GB exceed 2 GB.
+-  gEfiMdePkgTokenSpaceGuid.PcdPciExpressBaseAddress|0x80000000
++  # never lets the RAM below 4 GB exceed 2816 MB.
++  gEfiMdePkgTokenSpaceGuid.PcdPciExpressBaseAddress|0xB0000000
+ 
+ !ifdef $(SOURCE_DEBUG_ENABLE)
+   gEfiSourceLevelDebugPkgTokenSpaceGuid.PcdDebugLoadImageMethod|0x2
+-- 
+1.8.3.1
+

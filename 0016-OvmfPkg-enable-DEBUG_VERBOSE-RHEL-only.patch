@@ -1,0 +1,89 @@
+From 7e6d5dc4078c64be6d55d8fc3317c59a91507a50 Mon Sep 17 00:00:00 2001
+From: Paolo Bonzini <pbonzini@redhat.com>
+Date: Tue, 21 Nov 2017 00:57:45 +0100
+Subject: OvmfPkg: enable DEBUG_VERBOSE (RHEL only)
+
+Notes about the RHEL-8.0/20180508-ee3198e672e2 ->
+RHEL-8.1/20190308-89910a39dcfd rebase:
+
+- no change
+
+Notes about the RHEL-7.6/ovmf-20180508-2.gitee3198e672e2.el7 ->
+RHEL-8.0/20180508-ee3198e672e2 rebase:
+
+- reorder the rebase changelog in the commit message so that it reads like
+  a blog: place more recent entries near the top
+- no changes to the patch body
+
+Notes about the 20171011-92d07e48907f -> 20180508-ee3198e672e2 rebase:
+
+- no changes
+
+Message-id: <20171120235748.29669-5-pbonzini@redhat.com>
+Patchwork-id: 77760
+O-Subject:  [PATCH 4/7] OvmfPkg: enable DEBUG_VERBOSE (RHEL only)
+Bugzilla: 1488247
+Acked-by: Laszlo Ersek <lersek@redhat.com>
+Acked-by: Thomas Huth <thuth@redhat.com>
+
+From: Laszlo Ersek <lersek@redhat.com>
+
+Set the DEBUG_VERBOSE bit (0x00400000) in the log mask. We want detailed
+debug messages, and code in OvmfPkg logs many messages on the
+DEBUG_VERBOSE level.
+
+Signed-off-by: Laszlo Ersek <lersek@redhat.com>
+Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
+(this patch was previously applied as commit 78d3ed73172b5738e32d2b0bc03f7984b9584117)
+(cherry picked from commit 7aeeaabc9871f657e65d2b99d81011b4964a1ce9)
+(cherry picked from commit a0617a6be1a80966099ddceb010f89202a79ee76)
+(cherry picked from commit 759bd3f591e2db699bdef4c7ea4e97c908e7f027)
+Signed-off-by: Danilo C. L. de Paula <ddepaula@redhat.com>
+---
+ OvmfPkg/OvmfPkgIa32.dsc    | 2 +-
+ OvmfPkg/OvmfPkgIa32X64.dsc | 2 +-
+ OvmfPkg/OvmfPkgX64.dsc     | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/OvmfPkg/OvmfPkgIa32.dsc b/OvmfPkg/OvmfPkgIa32.dsc
+index bc75e03d47..8093e6f000 100644
+--- a/OvmfPkg/OvmfPkgIa32.dsc
++++ b/OvmfPkg/OvmfPkgIa32.dsc
+@@ -484,7 +484,7 @@
+   # DEBUG_VERBOSE   0x00400000  // Detailed debug messages that may
+   #                             // significantly impact boot performance
+   # DEBUG_ERROR     0x80000000  // Error
+-  gEfiMdePkgTokenSpaceGuid.PcdDebugPrintErrorLevel|0x8000004F
++  gEfiMdePkgTokenSpaceGuid.PcdDebugPrintErrorLevel|0x8040004F
+ 
+ !ifdef $(SOURCE_DEBUG_ENABLE)
+   gEfiMdePkgTokenSpaceGuid.PcdDebugPropertyMask|0x17
+diff --git a/OvmfPkg/OvmfPkgIa32X64.dsc b/OvmfPkg/OvmfPkgIa32X64.dsc
+index f630737662..eca9b4e6db 100644
+--- a/OvmfPkg/OvmfPkgIa32X64.dsc
++++ b/OvmfPkg/OvmfPkgIa32X64.dsc
+@@ -489,7 +489,7 @@
+   # DEBUG_VERBOSE   0x00400000  // Detailed debug messages that may
+   #                             // significantly impact boot performance
+   # DEBUG_ERROR     0x80000000  // Error
+-  gEfiMdePkgTokenSpaceGuid.PcdDebugPrintErrorLevel|0x8000004F
++  gEfiMdePkgTokenSpaceGuid.PcdDebugPrintErrorLevel|0x8040004F
+ 
+ !ifdef $(SOURCE_DEBUG_ENABLE)
+   gEfiMdePkgTokenSpaceGuid.PcdDebugPropertyMask|0x17
+diff --git a/OvmfPkg/OvmfPkgX64.dsc b/OvmfPkg/OvmfPkgX64.dsc
+index ac70a0cac1..3ff9a3181e 100644
+--- a/OvmfPkg/OvmfPkgX64.dsc
++++ b/OvmfPkg/OvmfPkgX64.dsc
+@@ -489,7 +489,7 @@
+   # DEBUG_VERBOSE   0x00400000  // Detailed debug messages that may
+   #                             // significantly impact boot performance
+   # DEBUG_ERROR     0x80000000  // Error
+-  gEfiMdePkgTokenSpaceGuid.PcdDebugPrintErrorLevel|0x8000004F
++  gEfiMdePkgTokenSpaceGuid.PcdDebugPrintErrorLevel|0x8040004F
+ 
+ !ifdef $(SOURCE_DEBUG_ENABLE)
+   gEfiMdePkgTokenSpaceGuid.PcdDebugPropertyMask|0x17
+-- 
+2.18.1
+
