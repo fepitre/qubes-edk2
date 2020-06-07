@@ -294,12 +294,9 @@ mkdir -p \
   $RPM_BUILD_ROOT%{_datadir}/OVMF \
   $RPM_BUILD_ROOT%{_datadir}/%{name}/ovmf
 
-# We don't ship the SB-less, SMM-less binary.
-%if 0
 install -m 0644 Build/OvmfX64/DEBUG_%{TOOLCHAIN}/FV/OVMF_CODE.fd \
   $RPM_BUILD_ROOT%{_datadir}/%{name}/ovmf/OVMF_CODE.fd
 ln -s ../%{name}/ovmf/OVMF_CODE.fd         $RPM_BUILD_ROOT%{_datadir}/OVMF/
-%endif
 install -m 0644 Build/Ovmf3264/DEBUG_%{TOOLCHAIN}/FV/OVMF_CODE.fd \
   $RPM_BUILD_ROOT%{_datadir}/%{name}/ovmf/OVMF_CODE.secboot.fd
 
@@ -407,10 +404,8 @@ install BaseTools/Scripts/GccBase.lds \
 %doc ovmf-whitepaper-c770f8c.txt
 %dir %{_datadir}/OVMF/
 %dir %{_datadir}/%{name}/ovmf/
-%if 0
 %{_datadir}/%{name}/ovmf/OVMF_CODE.fd
 %{_datadir}/OVMF/OVMF_CODE.fd
-%endif
 %{_datadir}/%{name}/ovmf/OVMF_CODE.secboot.fd
 %{_datadir}/%{name}/ovmf/OVMF_VARS.fd
 %{_datadir}/%{name}/ovmf/OVMF_VARS.secboot.fd
